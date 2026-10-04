@@ -11463,6 +11463,15 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_perf() {
         }
     }
 
+    // hyper-connection down/up projections (hc_dim = 4*2560, low rank 320) at prompt batch sizes
+    for (ggml_type type_a : {GGML_TYPE_BF16, GGML_TYPE_F16, GGML_TYPE_F32, GGML_TYPE_Q8_0}) {
+        for (int64_t n_tokens : {1024, 4096}) {
+            test_cases.emplace_back(new test_mul_mat(type_a, GGML_TYPE_F32, 320, n_tokens, 10240, {1, 1}, {1, 1}));
+            test_cases.emplace_back(new test_mul_mat(type_a, GGML_TYPE_F32, 10240, n_tokens, 320, {1, 1}, {1, 1}));
+            test_cases.emplace_back(new test_mul_mat(type_a, GGML_TYPE_F32, 2560, n_tokens, 2560, {1, 1}, {1, 1}));
+        }
+    }
+
     // CONT of a 0<->2 permute at DeepSeek-V4 lightning-indexer shapes:
     // indexer_kq is [n_kv, n_tokens, n_head=64] and gets ggml_cont(ggml_permute(.., 2,1,0,3)).
     for (int64_t n_kv : { 1024, 1280, 2048, 2304 }) {
