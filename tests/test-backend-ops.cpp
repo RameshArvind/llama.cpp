@@ -11472,6 +11472,17 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_perf() {
         }
     }
 
+    // routed experts with many small experts (512 experts, top-10, expert width 640),
+    // against a dense matmul of the same per-expert shape
+    for (ggml_type type_a : {GGML_TYPE_Q2_0, GGML_TYPE_IQ2_XXS, GGML_TYPE_IQ2_XS, GGML_TYPE_IQ2_S,
+                             GGML_TYPE_IQ3_XXS, GGML_TYPE_IQ3_S, GGML_TYPE_IQ4_NL}) {
+        for (int64_t n_tokens : {1024, 4096}) {
+            test_cases.emplace_back(new test_mul_mat_id(type_a, GGML_TYPE_F32, 512, 10, false, 640, n_tokens, 2560));
+            test_cases.emplace_back(new test_mul_mat_id(type_a, GGML_TYPE_F32, 512, 10, false, 2560, n_tokens, 640));
+        }
+        test_cases.emplace_back(new test_mul_mat(type_a, GGML_TYPE_F32, 640, 4096, 2560, {1, 1}, {1, 1}));
+    }
+
     // CONT of a 0<->2 permute at DeepSeek-V4 lightning-indexer shapes:
     // indexer_kq is [n_kv, n_tokens, n_head=64] and gets ggml_cont(ggml_permute(.., 2,1,0,3)).
     for (int64_t n_kv : { 1024, 1280, 2048, 2304 }) {
